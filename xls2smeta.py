@@ -3,7 +3,6 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font
 import collections
 import configparser
-import csv
 import re
 from glob import glob
 
@@ -38,9 +37,6 @@ xls_out_columns = {'system': res,
                    'quantity': res + 7,
                    'comment': res + 8, }
 
-# Создаем файл результата
-f_result = open('result.csv', "w", newline='')
-csv_result = csv.writer(f_result, delimiter='#')
 
 recognized_row = 0
 all_row = 0
@@ -132,7 +128,7 @@ for filename in glob(task['global']['file']):
             ws.cell(row=i, column=xls_out_columns['quantity'], value=res_row['quantity']).font = Font(bold=bold)
         # ws.cell(row=i, column=xls_out_columns['comment'], value=res_row['type']).font = Font(bold=bold)
 
-    wb.save('R-' + re.sub(r"./data/", "", filename))
+    wb.save('./result/' + re.sub(r"./data/", "", filename))
 print('Распознано позиций:', recognized_row, 'из', all_row)
 c = collections.Counter(normalized_words)
 print(c.most_common(len(c)*2//10))
