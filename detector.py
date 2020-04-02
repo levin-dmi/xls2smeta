@@ -6,13 +6,28 @@ import configparser
 """
 
 
+def airthik_dim(name: str) -> str or None:
+    """
+    Ищем толщину воздуховода - число вида 0.2 или 1
+    окружено пробелами или =1мм
+    :param name: строка в которой ведем поиск
+    :return: строку с толщиной или None если не нашли
+    """
+    name = name.upper()
+    thick = re.search(r'[0-9][.,][0-9]', name)
+    if thick:
+        return thick[0].replace('.', ',')
+    else:
+        thick = re.search(r'[1-9]М', name)
+        if thick:
+            return thick[0][:-1]
+
+
 def airduct_dim(name: str) -> str or None:
     name = name.upper()
     size = ''
-    thick = re.search(r'[0-9][.,][0-9]', name)  # Ищем толщину
-    if thick:
-        thick = thick[0].replace('.', ',')
-    else:
+    thick = airthik_dim(name)  # Ищем толщину
+    if not thick:
         return None
     s_size1 = re.search(r'[1-9][0-9]+[XХ×]', name)  # Ищем размеры
     s_size2 = re.search(r'[XХ×][1-9][0-9]+', name)
@@ -29,15 +44,34 @@ def airduct_dim(name: str) -> str or None:
 
 def airconvert_dim(name: str) -> str or None:
     name = name.upper()
-    thick = re.search(r'[0-9][.,][0-9]', name)  # Ищем толщину
-    if thick:
-        thick = thick[0].replace('.', ',')
-    else:
+    thick = airthik_dim(name)  # Ищем толщину
+    if not thick:
         thick = ''
     s_size = re.findall(r'[1-9][0-9]+[XХ×][1-9][0-9]+', name)  # Ищем размеры
     r_size = re.findall(r'Ø[1-9][0-9]+', name)
     if len(s_size) + len(r_size) == 2:
         size = thick + 'х' if thick else ''
+        for s in s_size:
+            size = size + '(' + re.sub(r'[XХ×]', 'х', s) + ')х'
+        for s in r_size:
+            size = size + '(' + re.sub(r'Ø', '', s) + ')х'
+        return size[:-1]
+
+
+def airtap_dim(name: str) -> str or None:
+    name = name.upper()
+    thick = airthik_dim(name)  # Ищем толщину
+    if not thick:
+        thick = ''
+    angle = re.search(r'[1-9][0-9]+°', name)  # Ищем угол изгиба
+    if angle:
+        angle = angle[0].replace('.', ',')[:-1]
+    else:
+        return None
+    s_size = re.findall(r'[1-9][0-9]+[XХ×][1-9][0-9]+', name)  # Ищем размеры
+    r_size = re.findall(r'Ø[1-9][0-9]+', name)
+    if len(s_size) + len(r_size) == 2:
+        size = angle + '-' + thick + 'х' if thick else angle + '-'
         for s in s_size:
             size = size + '(' + re.sub(r'[XХ×]', 'х', s) + ')х'
         for s in r_size:
@@ -53,6 +87,7 @@ def int_int_dim(name: str) -> str or None:
         size = s_size1[0][0:-1] + 'х' + s_size2[0][1:]
         return size
 
+
 def float_float_dim(name: str) -> str or None:
     name = name.upper()
     s_size1 = re.search(r'[1-9][0-9]*[.,]?[0-9]?[XХ×]', name)  # Ищем размеры
@@ -61,6 +96,7 @@ def float_float_dim(name: str) -> str or None:
         size = s_size1[0][0:-1] + 'х' + s_size2[0][1:]
         return size
 
+
 def gost17375_dim(name: str) -> str or None:
     name = name.upper()
     size = re.search(r'[1-9][0-9]*-[^ ]*', name)  # Ищем размеры
@@ -68,12 +104,20 @@ def gost17375_dim(name: str) -> str or None:
         size = re.sub(r'XХ×', 'х', size[0])
         return size
 
+
 def gost17378_dim(name: str) -> str or None:
     name = name.upper()
     size = re.search(r'[КЭ]-[^ ]*', name)  # Ищем размеры
     if size:
         size = re.sub(r'XХ×', 'х', size[0])
         return size
+
+
+def du_dim(name: str) -> str or None:
+    name = name.upper()
+    size = re.search(r'ДУ[0-9]+', name)  # Ищем размеры
+    if size:
+        return size[0][2:]
 
 
 def none_dim(name: str) -> str:
@@ -96,7 +140,8 @@ def detect(incoming_str: str) -> dict:
                       r' \d{3,4}[^ ]\d{3,4} ',)
 
     dim_functions = {'airduct': airduct_dim, 'int_int': int_int_dim, 'none': none_dim, 'airconvert': airconvert_dim,
-                     'gost17375': gost17375_dim, 'float_float': float_float_dim, 'gost17378': gost17378_dim, }
+                     'gost17375': gost17375_dim, 'float_float': float_float_dim, 'gost17378': gost17378_dim,
+                     'airtap': airtap_dim, 'du': du_dim}
 
     # читаем файл с определением материалов
     mat_config = configparser.ConfigParser(inline_comment_prefixes=('#',))

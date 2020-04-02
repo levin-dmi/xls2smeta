@@ -137,6 +137,8 @@ class RowParser:
     def detect_new_block(self) -> bool:
         if self.detect_trash(self.current_rows[0]):
             return False
+        if re.fullmatch(r'Ду', self.current_rows[0]['name'][0:2]):
+            return False
         if re.fullmatch(r'[А-Я][а-я]', self.current_rows[0]['name'][0:2]):
             return True
         else:
@@ -144,6 +146,8 @@ class RowParser:
 
     @property
     def detect_end_block(self) -> bool:
+        if re.fullmatch(r'Ду', self.current_rows[-1]['name'][0:2]):
+            return False
         if re.fullmatch(r'[А-Я]', self.current_rows[-1]['name'][0:1]):
             return True
         elif self.detect_trash(self.current_rows[-1]):
