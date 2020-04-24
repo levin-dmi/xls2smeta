@@ -120,6 +120,24 @@ def du_dim(name: str) -> str or None:
         return size[0][2:]
 
 
+def int_dim(name: str) -> str or None:
+    name = name.upper()
+    size = re.search(r'[0-9]+', name)  # Ищем размеры
+    if size:
+        return size[0]
+
+
+def pn_dim(name: str) -> str or None:
+    name = name.upper()
+    pn = re.search(r'PN[0-9]+', name)  # Ищем маркировку PN
+    if not pn:
+        return None
+
+    r_size = re.findall(r'[Ø∅][1-9][0-9]+', name)  # Ищем размеры
+    if r_size:
+        return pn[0] + 'х' + r_size[0][1:]
+
+
 def none_dim(name: str) -> str:
     return ' '
 
@@ -141,7 +159,7 @@ def detect(incoming_str: str) -> dict:
 
     dim_functions = {'airduct': airduct_dim, 'int_int': int_int_dim, 'none': none_dim, 'airconvert': airconvert_dim,
                      'gost17375': gost17375_dim, 'float_float': float_float_dim, 'gost17378': gost17378_dim,
-                     'airtap': airtap_dim, 'du': du_dim}
+                     'airtap': airtap_dim, 'du': du_dim, 'int': int_dim, 'pn': pn_dim, }
 
     # читаем файл с определением материалов
     mat_config = configparser.ConfigParser(inline_comment_prefixes=('#',))

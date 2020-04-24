@@ -120,6 +120,7 @@ class RowParser:
     def normalize_row(self, in_row: dict) -> dict:
         """
         Приводим строку в стандартный вид (убираем None, лишние пробелы и переводы строк, типы данных)
+        Апдейт: убираем в начале строки номер вида 11.
         """
         row: dict = in_row.copy()
         for cell_name, cell in row.items():
@@ -131,6 +132,8 @@ class RowParser:
             if type(cell) != str:
                 cell = str(cell)  # Приводим к строке
             row[cell_name] = ' '.join(cell.split())  # убираем лишние служебные символы
+
+        row['name'] = re.sub(r'^[0-9]+\.[ ]+', '', row['name'])  # Убираем номер в начале строки
         return row
 
     @property
